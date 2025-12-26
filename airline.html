@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Airline Passenger Manager</title>
+  <style>
+    body{font-family:sans-serif;background:#f6f8fb;color:#0b1220;margin:0;padding:20px;}
+    .wrap{max-width:800px;margin:0 auto;}
+    header{background:#0b1f3a;color:#fff;padding:20px;border-radius:16px;margin-bottom:20px;}
+    h1{margin:0;font-size:20px;}
+    .card{background:#fff;padding:16px;border-radius:16px;margin-bottom:20px;border:1px solid #e6eaf2;}
+    label{display:block;margin:10px 0 5px;font-size:14px;}
+    input, select, button{padding:8px 12px;font-size:14px;margin-bottom:10px;width:100%;border-radius:12px;border:1px solid #e6eaf2;}
+    button.primary{background:#0b1f3a;color:#fff;border:none;cursor:pointer;}
+    button.danger{background:#b42318;color:#fff;border:none;cursor:pointer;}
+    .row{display:flex;gap:10px;flex-wrap:wrap;}
+    .field{flex:1;min-width:120px;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Airline Passenger Manager</h1>
+    <p>Manage passengers across airlines</p>
+  </header>
+
+  <div class="card">
+    <h2>Add Passenger</h2>
+    <label for="add-airline">Airline</label>
+    <select id="add-airline"></select>
+
+    <div class="row">
+      <div class="field">
+        <label for="add-name">Name</label>
+        <input id="add-name" placeholder="e.g., John" />
+      </div>
+      <div class="field">
+        <label for="add-sex">Sex</label>
+        <select id="add-sex">
+          <option value="">Select…</option>
+          <option value="male">male</option>
+          <option value="female">female</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="add-age">Age</label>
+        <input id="add-age" inputmode="numeric" placeholder="e.g., 24" />
+      </div>
+      <div class="field">
+        <label for="add-marriage">Marriage</label>
+        <select id="add-marriage">
+          <option value="">Select…</option>
+          <option value="single">single</option>
+          <option value="married">married</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="add-origin">Origin</label>
+        <select id="add-origin"></select>
+      </div>
+      <div class="field">
+        <label for="add-destination">Destination</label>
+        <select id="add-destination"></select>
+      </div>
+    </div>
+
+    <button class="primary" id="btn-add">Add passenger</button>
+    <button id="btn-clear">Clear form</button>
+  </div>
+
+  <div class="card">
+    <h2>Remove Passenger</h2>
+    <label for="rm-airline">Airline</label>
+    <select id="rm-airline"></select>
+    <label for="rm-name">Passenger Name</label>
+    <input id="rm-name" placeholder="e.g., John" />
+    <button class="primary" id="btn-remove">Remove passenger</button>
+  </div>
+
+  <div class="card">
+    <h2>Sort Passengers</h2>
+    <button class="primary" id="btn-sort">Sort all passengers</button>
+    <button id="btn-show-all">Show all passengers</button>
+  </div>
+
+  <div class="card">
+    <h2>Search</h2>
+    <label for="search-section">Section</label>
+    <select id="search-section">
+      <option value="airlines">Airlines</option>
+      <option value="passengers">Passenger</option>
+    </select>
+
+    <div id="search-airlines-block">
+      <label for="search-airline-name">Airline name</label>
+      <select id="search-airline-name"></select>
+    </div>
+
+    <div id="search-passengers-block" hidden>
+      <label for="search-passenger-airline">Airline</label>
+      <select id="search-passenger-airline"></select>
+    </div>
+
+    <button class="primary" id="btn-search">Search</button>
+  </div>
+
+  <div class="card">
+    <h2>Exit / Reset</h2>
+    <button class="danger" id="btn-exit">Exit</button>
+    <button id="btn-reset">Reset app</button>
+  </div>
+</div>
+
+<script>
+const passenger = {
+  "Delta": [], "American": [], "Turkish": [], "Indiana": [], "Emirates": [],
+  "Lufthansa": [], "Air France": [], "Qantas": [], "Singapore": [], "British Airways": []
+};
+
+const airline_data = {
+  "Delta": [80,true,94,176,true,true,54,95000],
+  "American":[83,true,84,203,false,true,60,129700],
+  "Turkish":[65,false,33,102,true,false,33,40264],
+  "Indiana":[54,false,43,305,false,true,76,100143],
+  "Emirates":[90,true,92,242,true,true,44,125000],
+  "Lufthansa":[78,true,88,198,true,true,49,107800],
+  "Air France":[75,true,86,176,true,false,39,97500],
+  "Qantas":[82,true,91,221,false,true,58,135000],
+  "Singapore":[88,true,95,215,true,true,57,145000],
+  "British Airways":[79,true,87,203,true,true,52,120000]
+};
+
+const flight_matrices = {
+  "Delta":[[0,0,1,0],[1,0,1,1],[0,1,0,1],[1,1,0,0]],
+  "American":[[0,1,0,0],[1,0,1,1],[1,0,0,1],[0,1,1,0]],
+  "Turkish":[[0,1,1,0],[0,0,1,1],[1,0,0,0],[1,0,1,0]],
+  "Indiana":[[0,0,1,0],[1,0,1,1],[0,1,0,1],[0,0,1,0]],
+  "Emirates":[[0,1,0,0],[1,0,1,1],[0,1,0,0],[1,1,0,1]],
+  "Lufthansa":[[1,0,1,0],[0,1,0,1],[0,1,0,0],[1,1,1,0]],
+  "Air France":[[0,1,0,1],[0,0,1,1],[1,0,0,1],[1,0,0,0]],
+  "Qantas":[[0,0,1,0],[0,1,1,1],[1,1,0,0],[1,0,1,1]],
+  "Singapore":[[0,0,1,0],[0,1,1,1],[1,1,0,1],[1,0,0,0]],
+  "British Airways":[[0,0,1,1],[1,1,0,0],[1,0,1,1],[0,1,1,0]]
+};
+
+const countries = ["America","Germany","Emirates","Canada"];
+
+function titleCase(s){return s.charAt(0).toUpperCase()+s.slice(1).toLowerCase();}
+function isAlpha(s){return /^[A-Za-z]+$/.test(s);}
+function isDigits(s){return /^\d+$/.test(s);}
+
+function fillSelect(sel, arr){sel.innerHTML="";arr.forEach(v=>{let o=document.createElement("option");o.value=v;o.textContent=v;sel.appendChild(o);});}
+
+function init(){
+  fillSelect(document.getElementById("add-airline"), Object.keys(passenger));
+  fillSelect(document.getElementById("rm-airline"), Object.keys(passenger));
+  fillSelect(document.getElementById("search-passenger-airline"), Object.keys(passenger));
+  fillSelect(document.getElementById("search-airline-name"), Object.keys(airline_data));
+  fillSelect(document.getElementById("add-origin"), countries);
+  fillSelect(document.getElementById("add-destination"), countries);
+
+  bindButtons();
+  bindSearchToggle();
+}
+
+function checkAvailability(airline, origin, dest){
+  let i = countries.indexOf(origin), j = countries.indexOf(dest);
+  return i!==-1 && j!==-1 && flight_matrices[airline][i][j]===1;
+}
+
+function addPassenger(){
+  const airline = document.getElementById("add-airline").value;
+  const name = titleCase(document.getElementById("add-name").value.trim());
+  const sex = document.getElementById("add-sex").value;
+  const age = document.getElementById("add-age").value.trim();
+  const marriage = document.getElementById("add-marriage").value;
+  const origin = document.getElementById("add-origin").value;
+  const dest = document.getElementById("add-destination").value;
+
+  if(!airline || !Object.keys(passenger).includes(airline)){alert("Invalid airline"); return;}
+  if(!isAlpha(name)){alert("Invalid name"); return;}
+  if(!["male","female"].includes(sex)){alert("Invalid sex"); return;}
+  if(!isDigits(age)){alert("Invalid age"); return;}
+  if(!["single","married"].includes(marriage)){alert("Invalid marriage"); return;}
+  if(!countries.includes(origin) || !countries.includes(dest)){alert("Invalid origin/destination"); return;}
+
+  passenger[airline].push(name);
+  let avail = checkAvailability(airline, origin, dest) ? "Available" : "Not available";
+  alert(`Passenger "${name}" added to ${airline}. Flight availability: ${avail}`);
+}
+
+function removePassenger(){
+  const airline = document.getElementById("rm-airline").value;
+  const name = titleCase(document.getElementById("rm-name").value.trim());
+  if(passenger[airline].includes(name)){
+    passenger[airline] = passenger[airline].filter(n=>n!==name);
+    alert(`Passenger "${name}" removed from ${airline}.`);
+  }else alert(`Passenger "${name}" not found in ${airline}.`);
+}
+
+function sortPassengers(){
+  for(let a in passenger) passenger[a].sort((x,y)=>x.localeCompare(y));
+  let msg = "";
+  for(let a in passenger) msg+=`${a}: ${passenger[a].length?passenger[a].join(", "):"No passengers"}\n`;
+  alert("Sorted passengers:\n"+msg);
+}
+
+function searchPassengers(){
+  const section = document.getElementById("search-section").value;
+  if(section==="airlines"){
+    const name = document.getElementById("search-airline-name").value;
+    if(name in airline_data){
+      const d=airline_data[name];
+      alert(`Info for ${name}:\nSafety:${d[0]}\nInternational:${d[1]}\nSatisfaction:${d[2]}\nPlane:${d[3]}\nDiscount:${d[4]}\nFirst Class:${d[5]}\nAge:${d[6]}\nEmployee:${d[7]}`);
+    }else alert("Airline not found");
+  }else{
+    const airline = document.getElementById("search-passenger-airline").value;
+    if(passenger[airline].length) alert(`Passengers in ${airline}: ${passenger[airline].join(", ")}`);
+    else alert(`No passengers in ${airline}`);
+  }
+}
+
+function bindButtons(){
+  document.getElementById("btn-add").onclick = addPassenger;
+  document.getElementById("btn-clear").onclick = ()=>{document.getElementById("add-name").value="";document.getElementById("add-sex").value="";document.getElementById("add-age").value="";document.getElementById("add-marriage").value="";document.getElementById("add-origin").value="";document.getElementById("add-destination").value="";};
+  document.getElementById("btn-remove").onclick = removePassenger;
+  document.getElementById("btn-sort").onclick = sortPassengers;
+  document.getElementById("btn-show-all").onclick = sortPassengers;
+  document.getElementById("btn-search").onclick = searchPassengers;
+  document.getElementById("btn-exit").onclick = ()=>{if(confirm("Are you sure?")) alert("Thank you!");};
+  document.getElementById("btn-reset").onclick = ()=>{alert("App reset.");};
+}
+
+function bindSearchToggle(){
+  document.getElementById("search-section").onchange = ()=>{
+    let s=document.getElementById("search-section").value;
+    document.getElementById("search-airlines-block").hidden = s!=="airlines";
+    document.getElementById("search-passengers-block").hidden = s!=="passengers";
+  };
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
